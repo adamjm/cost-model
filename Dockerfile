@@ -1,3 +1,4 @@
+ARG ARCH
 FROM golang:latest as build-env
 
 RUN mkdir /app
@@ -9,10 +10,11 @@ COPY go.sum .
 RUN go mod download
 # COPY the source code as the last step
 COPY . .
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/app
 
-FROM alpine:3.4
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${ARCH} go build -a -installsuffix cgo -o /go/bin/app
+
+FROM ${ARCH}/alpine:3.6
 RUN apk add --update --no-cache ca-certificates git
 COPY --from=build-env /go/bin/app /go/bin/app
 ADD ./cloud/default.json /models/default.json
